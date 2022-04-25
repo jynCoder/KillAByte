@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <link rel="stylesheet" href="static/style/index.css">
+    <link rel="stylesheet" href="static/style/login.css">
+    <script src="static/js/index.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+<video autoplay muted loop id="background" class="background">
+    <source src="static/video/background.mp4" type="video/mp4">
+</video>
+<div class="main loginmain">
+    <h1>Login</h1>
+    <div class="main loginmain">
+        <form action="/login" method="POST">
+            <input type="text" id="username" name="username" placeholder="Username or email">
+            <input type=password name=password placeholder="Password">
+            <input type="image" class="loginbutton" src="static/icon/login-box-line.svg" width="24" height="24" value="Submit">
+        </form>
+    </div>
+</div>
+</body>
+</html>
