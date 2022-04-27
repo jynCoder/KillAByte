@@ -1,11 +1,12 @@
 #include <windows.h>
 #include <bcrypt.h>
-#include <wincrypt.h>
 #include <iostream>
-#include <shlwapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define NT_SUCCESS(Status)          (((NTSTATUS)(Status)) >= 0)
+#define STATUS_UNSUCCESSFUL         ((NTSTATUS)0xC0000001L)
 
 BCRYPT_ALG_HANDLE algHandle;
 BCRYPT_KEY_HANDLE keyHandle;
@@ -44,7 +45,7 @@ BCRYPT_KEY_HANDLE generateKeyRSA() {
 	if (!BCRYPT_SUCCESS(BCryptGenerateKeyPair(
 			algHandle,
 			&keyHandle,
-			512, //Key length is 512, can be adjusted here
+			1024, //Key length is 1024, can be adjusted here
 			0))) {
 		std::cout << "[ERROR] Key pair for RSA could not be generated." << std::endl;
 		cleanUp();
@@ -84,7 +85,7 @@ char* encryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* plainText) {
 			NULL,
 			0,
 			&confirmSize,
-			BCRYPT_PAD_NONE))) {
+			BCRYPT_PAD_PKCS1))) {
 		std::cout << "[ERROR] RSA encryption failed (obtaining size for encrypted text)." << std::endl;
 		cleanUp();
 		return NULL;
@@ -98,7 +99,7 @@ char* encryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* plainText) {
     ULONG confirmData;
 
     // 2. With size, can encrypt
-    if (!BCRYPT_SUCCESS(BCryptEncrypt(
+    NTSTATUS result = BCryptEncrypt(
 			keyHandle,
 			(PUCHAR) plainText,
 			(ULONG) strlen(plainText),
@@ -106,14 +107,17 @@ char* encryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* plainText) {
 			NULL,
 			0,
 			(PUCHAR) encryptedText,
-			confirmSize + 1,
+			confirmSize,
 			&confirmData,
-			BCRYPT_PAD_NONE))) {
+			BCRYPT_PAD_PKCS1);
+
+    if (!BCRYPT_SUCCESS(result)) {
 		std::cout << "[ERROR] RSA encryption failed (generating encrypted text)." << std::endl;
 		cleanUp();
 		return NULL;
 	}
 
+	encryptedText[confirmSize] = '\0';
 	// printf("%s\n", encryptedText);
 
     return encryptedText;
@@ -128,7 +132,7 @@ char* decryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* encryptedText) {
 	// 1. Obtain size required for plaintext
 	ULONG confirmSize;
 
-	if (!BCRYPT_SUCCESS(BCryptDecrypt(
+	NTSTATUS result = BCryptDecrypt(
 			keyHandle,
 			(PUCHAR) encryptedText,
 			(ULONG) strlen(encryptedText),
@@ -138,14 +142,13 @@ char* decryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* encryptedText) {
 			NULL,
 			0,
 			&confirmSize,
-			BCRYPT_PAD_NONE))) {
+			BCRYPT_PAD_PKCS1);
+
+	if (!BCRYPT_SUCCESS(result)) {
 		std::cout << "[ERROR] RSA decryption failed (obtaining size for decrypted text)." << std::endl;
 		cleanUp();
 		return NULL;
 	}
-
-	printf("confirmSize: ");
-    printf("%lu\n", confirmSize);
 
     char* plainText = (char*) malloc(confirmSize + 1);
     ULONG confirmData;
@@ -158,9 +161,9 @@ char* decryptRSA(BCRYPT_KEY_HANDLE keyHandle, char* encryptedText) {
 			NULL,
 			0,
 			(PUCHAR) plainText,
-			confirmSize + 1,
+			confirmSize,
 			&confirmData,
-			BCRYPT_PAD_NONE))) {
+			BCRYPT_PAD_PKCS1))) {
 		std::cout << "[ERROR] RSA decryption failed (obtaining size for decrypted text)." << std::endl;
 		cleanUp();
 		return NULL;
