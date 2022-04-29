@@ -10,4 +10,4 @@ endif
 .PHONY: all loot.exe clean
 
 loot.exe:
-	$(CXX) loot.cpp -static -o bin/loot.exe
+	$(CXX) loot.cpp -lCrypt32 -static -o bin/loot.exe

