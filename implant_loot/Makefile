@@ -10,4 +10,5 @@ endif
 .PHONY: all loot.exe clean
 
 loot.exe:
-	$(CXX) loot.cpp -lCrypt32 -static -o bin/loot.exe
+	$(CC) sqlite3.c -c
+	$(CXX) loot.cpp sqlite3.o -lpthread -ldl -lCrypt32 -static -o bin/loot.exe

