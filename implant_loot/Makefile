@@ -11,4 +11,5 @@ endif
 
 loot.exe:
 	$(CC) sqlite3.c -c
-	$(CXX) loot.cpp sqlite3.o -lpthread -ldl -lCrypt32 -static -o bin/loot.exe
+	$(CC) aesgcm.cpp -c
+	$(CXX) loot.cpp sqlite3.o aesgcm.o -lpthread -ldl -lCrypt32 -lbcrypt -static -o bin/loot.exe

