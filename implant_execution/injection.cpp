@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
 
 	if (argc != 3) {
 		printf("[ERROR] Invalid argument/s.\n");
-        printf("[INFO] Usage: ...\\injection.cpp [pid] [DLL path]\n");
+        printf("[INFO] Usage: ...\\injection.cpp [pid] [shellcode]\n");
         return 0;
     }
 
@@ -53,17 +53,16 @@ int main(int argc, char* argv[]) {
     	return 0;
     }
 
-    // Create remote thread, load DLL
-    LPTHREAD_START_ROUTINE startAddr = (LPTHREAD_START_ROUTINE)(GetProcAddress(GetModuleHandleA("kernel32"), "LoadLibraryA"));
+    // Create remote thread, load shellcode
     DWORD threadId;
 
     HANDLE tHandle = CreateRemoteThread(
     		pHandle,
     		NULL,
     		0,
-    		startAddr,
-    		buf,
-    		0,
+    		(LPTHREAD_START_ROUTINE)buf,
+    		NULL,
+    		GENERIC_EXECUTE,
     		&threadId);
 
     if (!tHandle) {
