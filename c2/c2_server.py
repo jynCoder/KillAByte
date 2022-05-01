@@ -1,5 +1,5 @@
 from mimetypes import common_types
-from flask import Flask , request, jsonify
+from flask import Flask , request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 
