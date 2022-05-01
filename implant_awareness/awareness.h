@@ -13,7 +13,7 @@ string getUserTokenSid();
 string getUserName();
 string getComputerName();
 string getMachineGuid();
-vector<string> getFilesInDirectory();
+vector<string> getFilesInDirectory(string dirpath);
 vector<string> getAllProcesses();
 string setFileDirectory(string path);
 #endif

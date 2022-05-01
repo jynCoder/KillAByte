@@ -19,13 +19,13 @@ int main() {
     cout << getUserName() << endl;
     cout << getComputerName() << endl;
     cout << getMachineGuid() << "\n" << endl;
-    vector<string> directoryFiles = getFilesInDirectory();
+    vector<string> directoryFiles = getFilesInDirectory(".");
     
     // Reference on auto: https://stackoverflow.com/questions/29859796/c-auto-vs-autov 
     for (auto& filename: directoryFiles) {
         cout << filename << endl;
     }
     getAllProcesses();
-    cout << setFileDirectory("bin") << endl;
+    // cout << setFileDirectory("bin") << endl;
     return 0;
 }

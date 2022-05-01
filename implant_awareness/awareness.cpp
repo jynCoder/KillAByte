@@ -198,12 +198,18 @@ string getMachineGuid() {
     return machineGuid;
 }
 
-vector<string> getFilesInDirectory() {
+/**
+ * @brief Retrieves all files in a given directory
+ * 
+ * @param dirpath directory path, do not add backslash at the end. If empty string, will get files in current drive
+ * @return vector<string> 
+ */
+vector<string> getFilesInDirectory(string dirpath) {
     vector<string> files;
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATA ffd;
 
-    hFind = FindFirstFile("\\*", &ffd);
+    hFind = FindFirstFile((dirpath + "\\*").c_str(), &ffd);
 
     if (hFind == INVALID_HANDLE_VALUE) {
         printf("Error finding first file.");
