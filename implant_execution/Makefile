@@ -14,3 +14,6 @@ createProcess.exe:
 
 injection.exe:
 	$(CXX) injection.cpp -o bin/injection.exe
+
+local_shellcode.exe:
+	$(CXX) local_shellcode.cpp -o bin/local_shellcode.exe
