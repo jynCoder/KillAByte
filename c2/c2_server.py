@@ -2,11 +2,14 @@ from mimetypes import common_types
 from flask import Flask , request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
+import jinja2
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///c2.db'
 db = SQLAlchemy(app)
-
+jinja_env = jinja2.Environment(
+    loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
+)
 
 #job_cache = {}
 
@@ -100,11 +103,18 @@ def tasking(self):
 
     # invalid agent 
     if agent == None:
-        return jsonify({"status": "Bad", "message": "Bad agent!"})
+        template_vars = {
+            "status": "Bad",
+            "message": "Bad agent!"
+        }
+        template = template = jinja_env.get_template('ui/error.html')
+        self.response.write(template.render(template_vars))
+        #return jsonify({"status": "Bad", "message": "Bad agent!"})
     
     task = Task.query.filter_by(agent_id=agent_id, Status = CREATED).first()
     if task == None:
         # no work to be done
+        template =
         return jsonify({})
     else:
         # have tasked the agent
