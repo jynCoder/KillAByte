@@ -1,0 +1,6 @@
+*.exe
+*.dll
+*.so
+*.obj
+*_env
+__pycache__
