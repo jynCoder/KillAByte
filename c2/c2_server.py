@@ -68,11 +68,13 @@ def create_task():
 def list_tasks():
     tasks = Task.query.all()
     t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
+
+
     return jsonify(t)
 
 # we get get/recieve job reqeusts/response
 @app.route("/tasks", methods = [ "POST"])
-def tasking():
+def tasking(self):
     data = request.json
     if data == None:
         return jsonify({"status": "Bad", "message": "boo you!"})
@@ -108,12 +110,22 @@ def tasking():
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-        return jsonify({
-            "status": "ok",
-            "type": task.command_type, 
-            "cmd": task.cmd,
-            "job_id": task.job_id
-        })
+        template_vars =  {
+                "status": "ok",
+                "type": task.command_type,
+                "cmd": task.cmd,
+                "job_id": task.job_id
+            }
+
+        template = jinja_env.get_template('ui/controlCenter.html')
+        self.response.write(template.render(template_vars))
+        # return jsonify({
+        #     "status": "ok",
+        #     "type": task.command_type,
+        #     "cmd": task.cmd,
+        #     "job_id": task.job_id
+        # })
+
 
 
 
