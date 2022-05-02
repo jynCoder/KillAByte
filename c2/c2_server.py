@@ -7,9 +7,6 @@ import jinja2
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///c2.db'
 db = SQLAlchemy(app)
-jinja_env = jinja2.Environment(
-    loader = jinja2.FileSystemLoader(os.path.dirname(__file__))
-)
 
 #job_cache = {}
 
@@ -73,7 +70,10 @@ def list_tasks():
     t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
 
 
-    return jsonify(t)
+    return render_template({
+            'ui/controlCenter.html',
+            t=t
+        })
 
 # we get get/recieve job reqeusts/response
 @app.route("/tasks", methods = [ "POST"])
@@ -107,9 +107,13 @@ def tasking(self):
             "status": "Bad",
             "message": "Bad agent!"
         }
-        template = template = jinja_env.get_template('ui/error.html')
-        self.response.write(template.render(template_vars))
-        #return jsonify({"status": "Bad", "message": "Bad agent!"})
+
+         return render_template(
+            'ui/error.html',
+            status = "Bad",
+            message = "Bad Agent"
+         )
+         #jsonify({"status": "Bad", "message": "Bad agent!"})
     
     task = Task.query.filter_by(agent_id=agent_id, Status = CREATED).first()
     if task == None:
@@ -120,21 +124,13 @@ def tasking(self):
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-        template_vars =  {
-                "status": "ok",
-                "type": task.command_type,
-                "cmd": task.cmd,
-                "job_id": task.job_id
-            }
 
-        template = jinja_env.get_template('ui/controlCenter.html')
-        self.response.write(template.render(template_vars))
-        # return jsonify({
-        #     "status": "ok",
-        #     "type": task.command_type,
-        #     "cmd": task.cmd,
-        #     "job_id": task.job_id
-        # })
+        return jsonify({
+            "status": "ok",
+            "type": task.command_type,
+            "cmd": task.cmd,
+            "job_id": task.job_id
+        })
 
 
 

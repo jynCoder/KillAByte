@@ -27,12 +27,13 @@
         <th>CMD</th>
     </tr>
     </thead>
+    {% for job in t%}
     <tbody>
-        <td>${{job_id}}</td>
-        <td>%{{agent_id}}</td>
-        <td>${{status}}</td>
-        <td>${{type}}</td>
-        <td>${{cmd}}</td>
+        <td>{{job.job_id}}</td>
+        <td>{{job.agent_id}}</td>
+        <td>{{job.status}}</td>
+        <td>{{job.type}}</td>
+        <td>{{job.cmd}}</td>
     </tbody>
 </table>
 </div>
