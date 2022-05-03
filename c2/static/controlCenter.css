@@ -83,12 +83,12 @@ h1,h2,h3,h4,h5,h6 {
 .fl-table td, .fl-table th {
     text-align: center;
     padding: 8px;
-
+    border-right: 1px solid #f8f8f8;
 }
 
 .fl-table td {
     border-right: 1px solid #f8f8f8;
-    font-size: 12px;
+    font-size: 15px;
     color: white;
     background-color: #1f1f1f;
 
@@ -97,18 +97,19 @@ h1,h2,h3,h4,h5,h6 {
 .fl-table thead th {
     color: white;
     background: black;
-    outline-color: antiquewhite;
+    border-right: 1px solid #f8f8f8;
 }
 
 
 .fl-table thead th:nth-child(odd) {
     color: white;
     background: black;
-    outline-color: antiquewhite;;
+    border-right: 1px solid #f8f8f8;
 }
 
 .fl-table tr:nth-child(even) {
     background: #F8F8F8;
+    border-right: 1px solid #f8f8f8;
 }
 
 /* Responsive */
@@ -150,6 +151,7 @@ h1,h2,h3,h4,h5,h6 {
         width: 120px;
         font-size: 13px;
         text-overflow: ellipsis;
+        border-right: 1px solid #f8f8f8;
     }
     .fl-table thead th {
         text-align: left;
