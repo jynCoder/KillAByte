@@ -22,7 +22,6 @@ CREATED = "CREATED"
 TASKED = 'TASKED'
 DONE = "DONE"
 
-
 # ORM for a task 
 class Task(db.Model):
     id= db.Column(db.Integer, primary_key=True)
@@ -110,7 +109,7 @@ def tasking():
         }
 
         return render_template(
-            'ui/error.html',
+            'error.html',
             status = "Bad",
             message = "Bad Agent"
          )
