@@ -7,13 +7,13 @@ else
 	RM=rm
 endif
 
-.PHONY: all createProcess.exe clean
+.PHONY: all createProcess.exe injection.exe local_shellcode.exe clean
 
 createProcess.exe:
-	$(CC) createProcess.c -o bin/createProcess.exe
+	$(CXX) createProcess.cpp http.cpp -lwinhttp -static -o bin/createProcess.exe
 
 injection.exe:
-	$(CXX) injection.cpp -o bin/injection.exe
+	$(CXX) injection.cpp http.cpp -lwinhttp -static -o bin/injection.exe
 
 local_shellcode.exe:
-	$(CXX) local_shellcode.cpp -o bin/local_shellcode.exe
+	$(CXX) local_shellcode.cpp http.cpp -lwinhttp -static -o bin/local_shellcode.exe

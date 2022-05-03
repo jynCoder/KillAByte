@@ -39,12 +39,12 @@ int main(int argc, char* argv[]) {
     	return 0;
     }
 
-    int dllPathSize = strlen(argv[2]) + 1;
+    int codeSize = strlen(argv[2]) + 1;
     BOOL memCheck = WriteProcessMemory(
     		pHandle,
     		buf,
     		argv[2],
-    		dllPathSize,
+    		codeSize,
     		NULL);
 
     if (!memCheck) {

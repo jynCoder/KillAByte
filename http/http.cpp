@@ -1,9 +1,4 @@
-#include <windows.h>
-#include <string>
-#include <iostream>
-#include <winhttp.h>
-#include <tuple>
-#include <algorithm>
+#include "http.h"
 
 BOOL cleanUp(WINHTTPAPI HINTERNET httpOpenHandle, WINHTTPAPI HINTERNET httpConnectHandle, WINHTTPAPI HINTERNET httpOpenRequestHandle) {
     if (!WinHttpCloseHandle(httpOpenHandle)) {
@@ -312,51 +307,51 @@ std::string makeHttpRequestPOST(std::string fqdn, int port, std::string uri, boo
     return result;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 7) {
-        printf("[ERROR] Wrong number of arguments.\n");
-        printf("[INFO] Syntax: http.exe (fqdn) (port) (uri) (use_tls) (get/post = 0/1) (data)\n");
-        printf("[INFO] For JSON requests, please use single quotes.\n");
-        return 0;
-    }
+// int main(int argc, char* argv[]) {
+//     if (argc != 7) {
+//         printf("[ERROR] Wrong number of arguments.\n");
+//         printf("[INFO] Syntax: http.exe (fqdn) (port) (uri) (use_tls) (get/post = 0/1) (data)\n");
+//         printf("[INFO] For JSON requests, please use single quotes.\n");
+//         return 0;
+//     }
 
-    std::string fqdn = std::string(argv[1]);
-    int port = std::stoi(argv[2]);
-    std::string uri = std::string(argv[3]);
-    int useTLS =std::stoi(argv[4]);
-    int getOrPost = std::stoi(argv[5]);
-    std::string data = std::string(argv[6]);
+//     std::string fqdn = std::string(argv[1]);
+//     int port = std::stoi(argv[2]);
+//     std::string uri = std::string(argv[3]);
+//     int useTLS =std::stoi(argv[4]);
+//     int getOrPost = std::stoi(argv[5]);
+//     std::string data = std::string(argv[6]);
 
-    bool tls;
-    bool getPost;
+//     bool tls;
+//     bool getPost;
     
-    if (useTLS == 1) {
-        tls = true;
-    } 
-    else if (useTLS == 0) {
-        tls = false;
-    } 
-    else {
-        printf("[ERROR] Bad value for useTLS (must be 0/1)\n");
-        return 0;
-    }
+//     if (useTLS == 1) {
+//         tls = true;
+//     } 
+//     else if (useTLS == 0) {
+//         tls = false;
+//     } 
+//     else {
+//         printf("[ERROR] Bad value for useTLS (must be 0/1)\n");
+//         return 0;
+//     }
 
-    if (getOrPost == 1) {
-        getPost = true; //POST req
-    }
-    else if (getOrPost == 0) {
-        getOrPost = false; //GET req
-    }
-    else {
-        printf("[ERROR] Bad value for GET/POST argument (must be 0/1 where 0 = GET, 1 = POST)\n");
-        return 0;
-    }
+//     if (getOrPost == 1) {
+//         getPost = true; //POST req
+//     }
+//     else if (getOrPost == 0) {
+//         getOrPost = false; //GET req
+//     }
+//     else {
+//         printf("[ERROR] Bad value for GET/POST argument (must be 0/1 where 0 = GET, 1 = POST)\n");
+//         return 0;
+//     }
 
-    if (getPost) {
-        std::cout << makeHttpRequestPOST(fqdn, port, uri, tls, data) << std::endl;
-    }
-    else {
-        std::cout << makeHttpRequestGET(fqdn, port, uri, tls) << std::endl;
-    }
-    return 0;
-}
+//     if (getPost) {
+//         std::cout << makeHttpRequestPOST(fqdn, port, uri, tls, data) << std::endl;
+//     }
+//     else {
+//         std::cout << makeHttpRequestGET(fqdn, port, uri, tls) << std::endl;
+//     }
+//     return 0;
+// }
