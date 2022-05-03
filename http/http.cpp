@@ -246,9 +246,6 @@ std::string makeHttpRequestPOST(std::string fqdn, int port, std::string uri, boo
     // Replace single quotes with double quotes
     std::replace(data.begin(), data.end(), '\'', '\"');
 
-    printf("Data: %s\n", data.c_str());
-    printf("Len: %d\n", data.length());
-
     //Now, send request
     BOOL checkSentRequest = WinHttpSendRequest(
         httpOpenRequestHandle,
