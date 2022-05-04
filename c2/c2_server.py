@@ -176,7 +176,11 @@ def register():# <-- handler
     db.session.commit()
     return jsonify({"status": "ok", "message": "Welcome!"})
 
-
+@app.route("/login", methods=["GET"])
+def login():
+    return render_template(
+        'login.html'
+    )
 
 if __name__ == "__main__":
     app.run()
