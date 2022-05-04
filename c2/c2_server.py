@@ -134,14 +134,17 @@ def tasking():
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-        t = [{ "job_id": task.job_id, "agent_id":task.agent_id, "command":task.cmd, "status": TASKED, "output": output}]
-        return render_template(
-            'outPut.html',
-            t=t
-        )
+        t = [{ "job_id": task.job_id, "agent_id":task.agent_id, "command":task.cmd, "status": DONE, "output": output}]
+        return t
 
 
-
+@app.route("/output/list", methods=["GET"])
+def out_handler():
+    t = tasking()
+    return render_template(
+        'outPut.html',
+        t=t
+    )
 @app.route("/agents/list")
 def list_agents() :
     agents = Agent.query.all()
