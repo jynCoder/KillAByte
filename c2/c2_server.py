@@ -40,7 +40,7 @@ def make_job_id():
 def get_jobs():
     tasks = Task.query.all()
     t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
-    return t
+    return jsonify(t)
 
 @app.route("/tasks/create", methods=["POST"])
 def create_task():
