@@ -1,1 +1,1 @@
-web: gunicorn cs501-project-mal.wsgi
+web: gunicorn cs501-project:cs501-project
