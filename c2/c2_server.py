@@ -36,8 +36,13 @@ def find_agent_by_id(id_):
 
 def make_job_id():
     return os.urandom(16).hex()
+@app.route("tasks/get-jobs")
+def get_jobs():
+    tasks = Task.query.all()
+    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
+    return t
 
-@app.route("/tasks/create", methods=["GET"])
+@app.route("/tasks/create", methods=["POST"])
 def create_task():
     data = request.json
     if data == None:
