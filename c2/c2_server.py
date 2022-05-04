@@ -3,16 +3,6 @@ from flask import Flask , request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 import jinja2
-from flask_bcrypt import Bcrypt
-from flask_migrate import Migrate
-from flask_login import(
-    UserMixin,
-    login_user,
-    LoginManager,
-    current_user,
-    logout_user,
-    login_required,
-)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///c2.db'
@@ -40,7 +30,6 @@ class Task(db.Model):
     cmd = db.Column(db.String)
     Status = db.Column(db.String)
     agent_id = db.Column(db.String)
-
 
 def find_agent_by_id(id_):
     return Agent.query.filter_by(agent_id=id_).first()
@@ -175,12 +164,6 @@ def register():# <-- handler
 
     db.session.commit()
     return jsonify({"status": "ok", "message": "Welcome!"})
-
-@app.route("/login", methods=["GET"])
-def login():
-    return render_template(
-        'login.html'
-    )
 
 if __name__ == "__main__":
     app.run()
