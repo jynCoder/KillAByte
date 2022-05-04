@@ -53,3 +53,6 @@ what type of dump we're going to generate, and where it will be.
 	[bool]$dumpsettings.SystemLogEvent = $regdata.LogEvent
 	$dumpsettings
 }
+
+Death
+Get-DumpSettings
