@@ -28,5 +28,6 @@ int main() {
     // getAllProcesses();
     // cout << setFileDirectory("bin") << endl;
     // cout << checkForRunningInstance() << endl;
+    // Sleep(5000);
     return 0;
 }

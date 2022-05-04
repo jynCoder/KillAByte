@@ -9,6 +9,7 @@
 #include <sddl.h>
 #include <Lmcons.h>
 #include <tlhelp32.h>
+#include "obfuscate.h"
 
 // #ifndef UNICODE  
 //   typedef std::string String; 
@@ -283,10 +284,10 @@ string setFileDirectory(string path) {
  */
 boolean checkForRunningInstance() {
     bool AlreadyRunning;
-    HANDLE hMutex = CreateMutex( NULL, TRUE, "SYSTEM-088FA840-B10D-11D3-BC36-006067709674");
+    HANDLE hMutex = CreateMutex( NULL, TRUE, AY_OBFUSCATE("SYSTEM-088FA840-B10D-11D3-BC36-006067709674"));
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         /* Another instance already exists */
-        printf("SHH WE'RE NOT HERE");
+        printf(AY_OBFUSCATE("SHH WE'RE NOT HERE"));
         return true;
     }
     return false;
