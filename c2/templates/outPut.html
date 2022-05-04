@@ -32,15 +32,16 @@
                 </tr>
                 </thead>
                 <tbody>
-<!--                {% for job in t %}-->
-<!--                <tr>-->
-<!--                    <td>{{job.job_id}}</td>-->
-<!--                    <td>{{job.agent_id}}</td>-->
-<!--                    <td>{{job.status}}</td>-->
-<!--                    <td>{{job.type}}</td>-->
-<!--                    <td>{{job.cmd}}</td>-->
-<!--                </tr>-->
-<!--                {% endfor %}-->
+                {% for job in t %}
+                <tr>
+                    <td>{{job.job_id}}</td>
+                    <td>{{job.agent_id}}</td>
+                    <td>{{job.status}}</td>
+                    <td>{{job.type}}</td>
+                    <td>{{job.cmd}}</td>
+                    <td>{{job.task_response}}</td>
+                </tr>
+                {% endfor %}
             <tbody>
         </table>
     </div>
