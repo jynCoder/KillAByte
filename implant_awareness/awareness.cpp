@@ -275,3 +275,19 @@ string setFileDirectory(string path) {
     }
     return string(buffer);
 }
+
+/**
+ * @brief Returns true if another instance of this implant already exists. Else returns false.
+ * 
+ * @return boolean 
+ */
+boolean checkForRunningInstance() {
+    bool AlreadyRunning;
+    HANDLE hMutex = CreateMutex( NULL, TRUE, "SYSTEM-088FA840-B10D-11D3-BC36-006067709674");
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        /* Another instance already exists */
+        printf("SHH WE'RE NOT HERE");
+        return true;
+    }
+    return false;
+}
