@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Output</title>
+    <link rel="stylesheet" href="{{ url_for('static',filename='controlCenter.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='buttons.css') }}">
+    <script src="{{ url_for('static',filename='controlCenterScripts.js') }}"></script>
+    <!--    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">-->
+
+</head>
+<body class="darkMode">
+    <div id="banner">
+
+        <div id="banner-content">
+            Kill-A-Byte Implant Output
+            <div class="dark">
+                <a class="btn btn-white btn-mid">Log-out</a>
+            </div>
+        </div>
+
+    </div>
+    <div class="table-wrapper">
+        <table class="fl-table">
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Agent ID</th>
+                    <th>Command</th>
+                    <th>Status</th>
+                    <th>Output</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for job in t %}
+                <tr>
+                    <td>{{job.job_id}}</td>
+                    <td>{{job.agent_id}}</td>
+                    <td>{{job.command}}</td>
+                    <td>{{job.status}}</td>
+                    <td>{{job.output}}</td>
+                </tr>
+                {% endfor %}
+            <tbody>
+        </table>
+    </div>
+</body>
