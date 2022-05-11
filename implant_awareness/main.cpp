@@ -34,7 +34,7 @@ int main() {
     outData.append(filenames);
     outData.append("\"}");
     printf("[INFO] RESULT: %s\n", outData.c_str());
-    // makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
+    makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
     // getAllProcesses();
     cout << setFileDirectory("bin") << endl;
     // cout << checkForRunningInstance() << endl;
