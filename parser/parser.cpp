@@ -48,17 +48,11 @@ int main(int argc, char* argv[]) {
 		    // Check all tasks at endpoint
 		    for (auto& res: taskResultJSONVector) {
 
-		    	printf("a\n");
 		    	current_task.job_id = res["job_id"];
-		    	printf("b\n");
 		    	current_task.agent_id = res["agent_id"];
-		    	printf("c\n");
 		    	current_task.command = res["command"];
-		    	printf("d\n");
 		    	current_task.status = res["status"];
-		    	printf("e\n");
 		    	current_task.arguments = res["arguments"];
-		    	printf("f\n");
 
 		    	printf("Job ID: %s\nAgent ID: %s\nCommand: %s\nStatus: %s\nArguments: %s\n", current_task.job_id.c_str(), current_task.agent_id.c_str(), current_task.command.c_str(), current_task.status.c_str(), current_task.arguments.c_str());
 
