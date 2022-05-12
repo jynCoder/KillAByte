@@ -20,6 +20,6 @@
 - To do so, we tested binding the tor.exe with other files but AV detects it as malicious file; other way around was to download tor portable exe, and auto-start it powershell script with autorun by changing the registry entry in client machine, which works on local system when tested.
 
 
-**Redictor Server**
-- Secure and easy way to anonymize the C2 would be to use redictor in-between the C2 and target, doing so will reflect in netstat results that the target is connected with redirector on 8080/tcp, forwarding all request to C2 while the redirector only listen on port 22 and 8080, allowing the C2 to connect, and C2 will allow 22/tcp for SSH from anywhere and outgoing 8080/tcp to connect with redirector, denying all other outgoing connections.
+**Redirector Server**
+- Secure and easy way to anonymize the C2 would be to use Redirector in-between the C2 and target, doing so will reflect in netstat results that the target is connected with Redirector on 8080/tcp, forwarding all request to C2 while the Redirector only listen on port 22 and 8080, allowing the C2 to connect, and C2 will allow 22/tcp for SSH from anywhere and outgoing 8080/tcp to connect with Redirector, denying all other outgoing connections.
 
