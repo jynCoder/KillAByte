@@ -1,13 +1,15 @@
 CC=gcc
+CXX=g++
 
+ifeq ($(OS),Windows_NT)
+	RM=powershell /c rm
+else	
+	RM=rm
+endif
 
-all: symbolic 
+.PHONY: all readfile.exe clean
 
-symbolic:
-	$(CC) symbolic.c -o bin/symbolic.exe
-	echo "Running on Examples:"
-	bin/symbolic.exe c: nul pipe con conin$ conout$ 
+readfile:
+	$(CC) fileio.c filesize.c symbolic.c -c
+	$(CXX) readfile.cpp  -lwinhttp -static -o bin/readfile.exe
 
-filesize:
-	$(CC) filesize.c -o bin/filesize.exe
-	./bin/filesize.exe ./bin/filesize.exe 
