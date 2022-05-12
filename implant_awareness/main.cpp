@@ -24,7 +24,7 @@ int main() {
     
     // Reference on auto: https://stackoverflow.com/questions/29859796/c-auto-vs-autov 
 
-    string outData = "{\"job_id\": \"0\", \"agent_id\": \"0\", \"command\": \"filenames.exe\", \"status\": \"SUCCESS\", \"output\": \"";
+    string outData = "{\'job_id\': \'0\', \'agent_id\': \'0\', \'command\': \'filenames.exe\', \'status\': \'SUCCESS\', \'output\': \'";
     string filenames = "\\n";
     for (auto& filename: directoryFiles) {
         filenames.append(filename + "\\n");
@@ -32,7 +32,7 @@ int main() {
     }
     
     outData.append(filenames);
-    outData.append("\"}");
+    outData.append("\'}");
     printf("[INFO] RESULT: %s\n", outData.c_str());
     makeHttpRequestPOST("127.0.0.1", 5000, "/output", 0, outData);
     // getAllProcesses();
