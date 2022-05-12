@@ -14,3 +14,12 @@
     "Add some of these preprocessor, preferably into the same commit where victim do a large merge"
   
   
+**Anonymizing C2 with Tor**
+- A high-level overview of this is that the C2 server and client mutually agree on a relay designated the Rendezvous Point, which is chosen at random. The server and client then build a three-hop path and rendezvous at this aptly-named relay. They are then free to exchange data with neither side needing to know the other's IP. 
+- Plan was to connect and access C2 via Tor circuit, which would provide anonymity both to clients as well as to servers using its hidden service. The protocol would allow a client to connect to a server knowing only an identifier and never needing to know the C2 IP.
+- To do so, we tested binding the tor.exe with other files but AV detects it as malicious file; other way around was to download tor portable exe, and auto-start it powershell script with autorun by changing the registry entry in client machine, which works on local system when tested.
+
+
+**Redictor Server**
+- Secure and easy way to anonymize the C2 would be to use redictor in-between the C2 and target, doing so will reflect in netstat results that the target is connected with redirector on 8080/tcp, forwarding all request to C2 while the redirector only listen on port 22 and 8080, allowing the C2 to connect, and C2 will allow 22/tcp for SSH from anywhere and outgoing 8080/tcp to connect with redirector, denying all other outgoing connections.
+
